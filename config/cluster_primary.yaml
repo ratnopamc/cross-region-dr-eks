@@ -1,0 +1,14 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: primary
+  region: us-east-2
+  version: "1.29"
+managedNodeGroups:
+  - name: mynodegroup
+    instanceType: m5.large
+    desiredCapacity: 3
+    minSize: 1
+    maxSize: 5
+    volumeSize: 20
