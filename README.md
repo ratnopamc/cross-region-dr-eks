@@ -1,18 +1,4 @@
-         ___        ______     ____ _                 _  ___  
-        / \ \      / / ___|   / ___| | ___  _   _  __| |/ _ \ 
-       / _ \ \ /\ / /\___ \  | |   | |/ _ \| | | |/ _` | (_) |
-      / ___ \ V  V /  ___) | | |___| | (_) | |_| | (_| |\__, |
-     /_/   \_\_/\_/  |____/   \____|_|\___/ \__,_|\__,_|  /_/ 
- ----------------------------------------------------------------- 
-
-
-Hi there! Welcome to AWS Cloud9!
-
-To get started, create some files, play with the terminal,
-or visit https://docs.aws.amazon.com/console/cloud9/ for our documentation.
-
-Happy coding!
-# cross-region-dr-eks
+# How to perform disaster recovery on EKS using Velero
 
 
 ## Create Primary and Recovery Cluster
@@ -22,20 +8,23 @@ Happy coding!
 
 export CLUSTER_PRIMARY=primary
 export CLUSTER_RECOVERY=recovery
-export CTX_PRIMARY=
-export CTX_RECOVERY=
+export CTX_PRIMARY=<primary-cluster_context>
+export CTX_RECOVERY=<secondary-cluster_context>
 
 ## Install other components
 
 // Set context to primary cluster
 
+```bash
 eksctl utils associate-iam-oidc-provider \
   --region=us-east-2 \
   --cluster=$CLUSTER_PRIMARY \
   --approve
-  
+```
  
-# Create a service account
+ Create a service account
+ 
+ ```bash
 eksctl create iamserviceaccount \
   --name ebs-csi-controller-sa \
   --namespace kube-system \
@@ -53,12 +42,12 @@ eksctl create addon --name aws-ebs-csi-driver --cluster $CLUSTER_PRIMARY --regio
   
 
 eksctl get addon --name aws-ebs-csi-driver --cluster $CLUSTER_PRIMARY --region us-east-2  
-
+```
 
 // change context to Recovery cluster
 
 
-
+```bash
 eksctl utils associate-iam-oidc-provider \
   --region=us-east-1 \
   --cluster=$CLUSTER_RECOVERY \
@@ -83,13 +72,19 @@ eksctl create addon --name aws-ebs-csi-driver --cluster $CLUSTER_RECOVERY --regi
     
 # check addon status
 eksctl get addon --name aws-ebs-csi-driver --cluster $CLUSTER_RECOVERY --region us-east-1  
-
+```
 
 // create s3 buckets
+
+```bash
 BUCKET=aratnch-eks-velero-dr
 REGION=us-east-2
 aws s3 mb s3://$BUCKET --region $REGION
+```
 
+Note: If you want to enable cross-region-replication on S3, that's also available. Specially with failing over to a different AWS region, you would want to enable it.
+
+Create IAM policy
 
 ```bash
 cd config
@@ -146,7 +141,7 @@ aws iam create-policy \
 
 // create service accounts for both clusters
 
-```
+```bash
 ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 
 eksctl create iamserviceaccount \
@@ -176,11 +171,12 @@ eksctl create iamserviceaccount \
 
 // if velero namespace exists, delete it
 
+```bash
 helm install velero vmware-tanzu/velero --create-namespace --namespace velero -f config/velero_primary_values.yaml --version 5.2.2
 
 
 helm install velero vmware-tanzu/velero --create-namespace --namespace velero -f config/velero_recovery_values.yaml --version 5.2.2 
-
+```
 
 
 Deploy sample workload on source/primary cluster
