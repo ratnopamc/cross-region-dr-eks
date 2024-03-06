@@ -4,7 +4,7 @@ kind: ClusterConfig
 metadata:
   name: primary
   region: us-east-2
-  version: "1.29"
+  version: "1.27"
 managedNodeGroups:
   - name: mynodegroup
     instanceType: m5.large

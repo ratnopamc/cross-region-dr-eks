@@ -2,7 +2,7 @@ configuration:
   uploaderType: kopia
   backupStorageLocation:
   - name: default
-    bucket: aratnch-eks-velero-dr
+    bucket: crr-aratnch-eks-velero-dr
     config:
       region: us-east-1
     provider: aws
